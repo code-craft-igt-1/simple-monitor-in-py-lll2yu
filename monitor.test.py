@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, call
 from monitor import check_vital, vitals_ok, print_critical_message
 
 
@@ -63,9 +63,19 @@ class TestMonitor(unittest.TestCase):
     def test_print_critical_message(self, mock_sleep, mock_print, mock_flush):
         print_critical_message("Test message", 12)
         self.assertEqual(mock_sleep.call_count, 12)
+        mock_print.assert_any_call("\nTest message")
+        expected_pattern_calls = [call('\r* ', end=''), call('\r *', end='')] * 6
+        mock_print.assert_has_calls(expected_pattern_calls, any_order=False)
+
         mock_sleep.reset_mock()
-        print_critical_message("Test message", 7)
+        mock_print.reset_mock()
+
+        print_critical_message("Test message2", 7)
         self.assertEqual(mock_sleep.call_count, 7)
+        mock_print.assert_any_call("\nTest message2")
+        expected_pattern_calls = [call('\r* ', end=''), call('\r *', end='')] * 3
+        expected_pattern_calls.append(call('\r* ', end=''))
+        mock_print.assert_has_calls(expected_pattern_calls, any_order=False)
 
 
 if __name__ == '__main__':
